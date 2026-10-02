@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hive Alert 2 — Arthropod Wars</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><ellipse cx='16' cy='18' rx='7' ry='10' fill='%232a8fb0'/><circle cx='16' cy='7' r='4' fill='%23123a52'/><path d='M9 12 2 6M23 12l7-6M9 20l-7 4M23 20l7 4' stroke='%23d9a441' stroke-width='2'/></svg>" />
+  </head>
+  <body>
+    <div id="app">
+      <main id="viewport" data-cursor="default">
+        <canvas id="overlay"></canvas>
+        <div id="topbar"><span class="mission" id="missionName">OPERATION: HIVE ALERT</span><span id="timer">0:00</span></div>
+        <div id="eva" aria-live="polite"></div>
+        <div id="swPanel" aria-label="Superweapons"></div>
+        <div id="stats" class="hidden"></div>
+        <div id="help" class="hidden" role="dialog" aria-label="Controls">
+          <div class="help-box">
+            <h2>FIELD MANUAL</h2>
+            <div class="cols">
+              <div>
+                <h3>Camera</h3>
+                <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows / screen edge &mdash; pan</p>
+                <p>Mouse wheel &mdash; zoom &nbsp;·&nbsp; Middle-drag &mdash; pan</p>
+                <p><kbd>H</kbd> home base &nbsp;·&nbsp; <kbd>Space</kbd> last alert</p>
+                <h3>Units</h3>
+                <p>Left-click / drag-box &mdash; select (<kbd>Shift</kbd> adds) · double-click &mdash; all of type</p>
+                <p>Right-click &mdash; move / attack / harvest / enter / infiltrate</p>
+                <p><kbd>Ctrl</kbd>+Right-click or <kbd>Q</kbd> &mdash; attack-move &nbsp;·&nbsp; <kbd>X</kbd> stop</p>
+                <p><kbd>F</kbd> deploy / unload / psychic wave / deploy MCV</p>
+                <p><kbd>Ctrl</kbd>+<kbd>1-9</kbd> set group · <kbd>1-9</kbd> recall · <kbd>Ctrl</kbd>+<kbd>A</kbd> army</p>
+                <p>Right-click your transport, Larval Vat, Digestion Chasm, Sting Pylon or Cleaning Hollow to enter it.</p>
+              </div>
+              <div>
+                <h3>Base</h3>
+                <p>Click a cameo to build; click again when <b>READY</b> to place (within 3 tiles of your base).</p>
+                <p>Right-click a cameo &mdash; hold, then cancel (refund).</p>
+                <p><kbd>R</kbd> repair &nbsp;·&nbsp; <kbd>E</kbd> sell &nbsp;·&nbsp; select a factory and right-click the map for a rally point.</p>
+                <p>Keep <b>power</b> above demand or production slows, defenses and radar go offline and superweapons stop charging.</p>
+                <p>Superweapons appear at the left edge &mdash; click when READY, then target.</p>
+                <h3>Display</h3>
+                <p><kbd>P</kbd> pixelate · <kbd>B</kbd> dither · <kbd>C</kbd> CRT · <kbd>M</kbd> mute · <kbd>I</kbd> stats</p>
+                <label class="opt">Pixel size <input id="optPixelSize" type="range" min="2" max="6" step="1" value="3"></label>
+                <label class="opt"><input id="optVoice" type="checkbox" checked> Voice announcer &amp; unit barks</label>
+                <label class="opt"><input id="optEdge" type="checkbox" checked> Edge scrolling</label>
+              </div>
+            </div>
+            <p class="goal">Objective: destroy every enemy structure. &nbsp;<a href="gallery.html" target="_blank" rel="noopener">Open the model gallery ↗</a></p>
+            <button id="helpClose">RESUME</button>
+          </div>
+        </div>
+        <div id="gameover" class="hidden"></div>
+      </main>
+
+      <aside id="sidebar" aria-label="Command sidebar">
+        <div class="sb-top">
+          <div class="logo"><span class="crest" id="crest">🐝</span> HIVE<br /><small>ALERT 2</small></div>
+          <div class="credits"><span class="lbl">NUTRIENTS</span><span id="credits">$0</span></div>
+        </div>
+        <div class="radar">
+          <canvas id="minimap" width="240" height="240" aria-label="Radar mini-map"></canvas>
+          <div id="radarOff" class="hidden">RADAR OFFLINE</div>
+        </div>
+        <div class="tools">
+          <button id="btnRepair" title="Repair mode (R)" aria-label="Repair mode">🔧</button>
+          <button id="btnSell" title="Sell mode (E)" aria-label="Sell mode">$</button>
+          <button id="btnPixel" title="Pixelation (P)">PIX</button>
+          <button id="btnDither" title="Dithering (B)">DTH</button>
+          <button id="btnCRT" title="CRT scanlines (C)">CRT</button>
+          <button id="btnSound" title="Sound (M)" aria-label="Toggle sound">🔊</button>
+          <button id="btnHelp" title="Field manual (F1)" aria-label="Help">?</button>
+        </div>
+        <div id="tabs" role="tablist">
+          <button data-tab="structures" title="Structures">BLDG</button>
+          <button data-tab="defense" title="Defenses">DEF</button>
+          <button data-tab="infantry" title="Infantry">INF</button>
+          <button data-tab="vehicles" title="Vehicles">VEH</button>
+        </div>
+        <div class="build">
+          <div id="power" title="Power: demand / supply">
+            <div class="power-track"><div id="powerFill"></div><div id="powerDemand"></div></div>
+            <span class="power-lbl">⚡</span>
+            <span id="powerText">0/0</span>
+          </div>
+          <div id="cameos"></div>
+        </div>
+        <div class="power-name" id="powerName">POWER</div>
+        <div id="selinfo"></div>
+      </aside>
+    </div>
+    <div id="tooltip" class="hidden"></div>
+
+    <div id="start">
+      <div class="start-box">
+        <div class="start-logo">
+          <h1>HIVE ALERT 2</h1>
+          <h2>ARTHROPOD WARS</h2>
+          <div class="sub">A Red Alert 2 · Yuri's Revenge insect conversion · isometric WebGL RTS</div>
+        </div>
+        <div class="pick-label">CHOOSE YOUR HIVE</div>
+        <div id="factionPick" role="radiogroup" aria-label="Your faction"></div>
+        <div class="row-opts">
+          <label>Enemy hive
+            <select id="enemyPick">
+              <option value="random">Random</option>
+              <option value="allied">Allied — Hymenoptera</option>
+              <option value="soviet">Soviet — Scorpiones</option>
+              <option value="yuri">Yuri — Psionic Parasites</option>
+            </select>
+          </label>
+          <div id="difficulty" role="radiogroup" aria-label="Difficulty">
+            <label><input type="radio" name="diff" value="easy"> <span>LARVA<small>easy</small></span></label>
+            <label><input type="radio" name="diff" value="normal" checked> <span>DRONE<small>normal</small></span></label>
+            <label><input type="radio" name="diff" value="hard"> <span>QUEEN<small>hard</small></span></label>
+          </div>
+        </div>
+        <div id="loading">Ready.</div>
+        <button id="deploy">DEPLOY</button>
+        <div class="hint">F1 for the field manual · <a href="gallery.html" target="_blank" rel="noopener">model gallery</a> · headphones recommended</div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

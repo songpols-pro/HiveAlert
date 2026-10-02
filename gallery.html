@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hive Alert 2 — Model Gallery</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #0b0f0d; color: #dfe8d6; font-family: Consolas, monospace; }
+      #view { position: absolute; inset: 0; }
+      #bar { position: absolute; top: 8px; left: 8px; display: flex; gap: 6px; flex-wrap: wrap; z-index: 2; }
+      #bar button { background: #262c2a; color: #dfe8d6; border: 1px solid #4a524f; padding: 4px 10px; cursor: pointer; font-family: inherit; }
+      #bar button.on { background: #79c84a; color: #102008; }
+      #labels { position: absolute; inset: 0; pointer-events: none; }
+      .lbl { position: absolute; transform: translate(-50%, 0); font-size: 11px; text-align: center; white-space: nowrap; text-shadow: 1px 1px 0 #000; }
+      .lbl b { color: #fff; } .lbl i { color: #8fae80; font-style: normal; }
+    </style>
+  </head>
+  <body>
+    <div id="view"></div>
+    <div id="labels"></div>
+    <div id="bar"></div>
+    <script type="module" src="/src/gallery.js"></script>
+  </body>
+</html>
